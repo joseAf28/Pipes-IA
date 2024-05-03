@@ -11,6 +11,8 @@ from search import (
 import numpy as np
 
 
+from copy import deepcopy
+
 
 ##! Initial Information
 ##? 1st - left, 2nd - right, 3rd - up, 4th - down
@@ -65,10 +67,9 @@ dictStr2Arr = {
 class Board:
     """Representação interna de um tabuleiro de PipeMania."""
     
-    def __init__(self, tableInit):
+    def __init__(self, tableInit, maskFrameCheckInit):
         self.table = tableInit
-        self.maskFrameCheck = None
-        self.matActions = None
+        self.maskFrameCheck = maskFrameCheckInit
     
     @staticmethod
     def parse_instance():
@@ -79,9 +80,12 @@ class Board:
             if line == '':  
                 break
             else:
-                linesData.append(line.split()) 
+                linesData.append(line.split())
+                
+        dataArr = np.array(linesData)
+        maskFrameCheck = np.full_like(dataArr, False, dtype=np.bool_)
     
-        return Board(np.array(linesData))
+        return Board(dataArr, maskFrameCheck)
     
     
     @staticmethod
@@ -616,6 +620,12 @@ class Board:
         
         ##! Delete the tableArr as it is not needed anymore
         del self.tableArr
+        del self.matActions
+
+
+
+    def is_goal(self):
+        return np.all(self.maskFrameCheck)
 
 
 class PipeManiaState:
@@ -634,7 +644,7 @@ class PipeManiaState:
 class PipeMania(Problem):
     
     def __init__(self,state: Board):
-        self.initState = board
+        self.initial = board
     
     
     # # old 
@@ -674,7 +684,7 @@ class PipeMania(Problem):
         actionsVec = []
         
         for x, y in zip(*idxActions):
-            actions = state.strategyOne(x, y, state.maskFrameCheck)
+            actions = board.strategyOne(x, y, state.maskFrameCheck)
             for action in actions:
                 actionsVec.append([x, y, action])
         
@@ -686,20 +696,48 @@ class PipeMania(Problem):
         x = action[0]
         y = action[1]
         action = action[2]
-        tableAux = state.table.copy()
-        tableAux[x, y] = action
+        
+        # newState = deepcopy(state)
+        
+        # newState.table[x, y] = action
+        # newState.maskFrameCheck[x, y] = True
+        
+        # return newState
+        
+        newTable = state.table.copy()
+        newTable[x, y] = action
         
         newMaskFrameCheck = state.maskFrameCheck.copy()
         newMaskFrameCheck[x, y] = True
         
-        newBoard = Board(tableAux)
-        newBoard.maskFrameCheck = newMaskFrameCheck
         
-        return newBoard
+        return Board(newTable, newMaskFrameCheck)
     
     
     def goal_test(self, state: PipeManiaState):
-        return np.all(state.maskFrameCheck)
+    
+        tableArr = np.array([[state.lookUpFunc(x) for x in row] for row in state.table], dtype=npType)
+        
+        mSize = tableArr.shape[0]
+        
+        dataPointsGrid = np.array([[state.getPointsSquare(x, y, tableArr[x,y]) for y in range(mSize)] for x in range(mSize)], dtype=npType)
+        
+        dotsX2 = np.zeros((mSize-1, mSize, 2, 2), dtype=npType) ##! slices along x constant
+        dotsY2 = np.zeros((mSize, mSize-1, 2, 2), dtype=npType) ##! slices along y constant
+        
+        dotsX2[:, :, 0, :] = dataPointsGrid[:-1, :, 1]
+        dotsX2[:, :, 1, :] = dataPointsGrid[1:, :, 0]
+
+        dotsY2[:, :, 0, :] = dataPointsGrid[:, :-1, 2]
+        dotsY2[:, :, 1, :] = dataPointsGrid[:, 1:, 3]
+        
+        matLogicalX = (dotsX2[:, :, 0, :] == dotsX2[:, :, 1, :]) & (np.any(dotsX2[:, :, 1, :] > -1)) & (np.any(dotsX2[:, :, 0, :] > -1))
+        matLogicalY = (dotsY2[:, :, 0, :] == dotsY2[:, :, 1, :]) & (np.any(dotsX2[:, :, 1, :] > -1)) & (np.any(dotsX2[:, :, 1, :] > -1))
+        
+        resLogicalX = np.all(matLogicalX, axis=2)
+        resLogicalY = np.all(matLogicalY, axis=2)
+        
+        return np.all(resLogicalX) and np.all(resLogicalY)
     
     
     # def h(self, node: Node):
@@ -724,55 +762,42 @@ class PipeMania(Problem):
             return actions[newIdx], 1
 
 
+import time
+
 if __name__ == "__main__":
     
     ##! Obtain the Board from the standard input
     board = Board.parse_instance()
     
-    # print("Init Table:")
-    # print(board.table)
-    # print()
+    pipeZero = PipeMania(board)
+    if pipeZero.goal_test(board):
+        print("The board is already solved.")
+        sys.exit(0)
     
     ##? Deterministic Inference
     ##! Start with the Board class and simplify it the most we can.
     board.deterministicInference()
     
-    
-    print("check variables")
-    print(vars(board))
-    
-    ##! PipeMania Declaration and Methods' Verification
-    ## check bug: last action tensor shape
-
-    board.matActions = np.full_like(board.table, 0, dtype=object)
-    newPipes = PipeMania(board)
-    actions = newPipes.actions(board)
-    
-    bestAction, size = newPipes.h(actions)
-    for row in bestAction:
-        board = newPipes.result(board, row)
-    
-    actions = newPipes.actions(board)
-    actions, size = newPipes.h(actions)
-
-    if size == 1:
-        board = newPipes.result(board, actions)
+    ##! check if the board is already solved
+    if board.is_goal():
+        print("Deterministically solved.")
+        
+        print("vars: ", vars(board))
     else:
-        for row in actions:
-            board = newPipes.result(board, row)
+        ##! Create PipeMania to solve the unsolved domain of the board
+        pipeOne = PipeMania(board)
+        
+        print("check variables before Search Algorithm \n")
+        print(vars(pipeOne.initial))
     
-    actions = newPipes.actions(board)
-    actions, size = newPipes.h(actions)
     
-    for row in actions:
-            board = newPipes.result(board, row)
-    
-    print("Final Table:")
-    print(board.table)
-    print("check goal: ", newPipes.goal_test(board))
-    
-    ##! Search Algotithms over the Unsolved Domain
-    
-    ## try the different search algorithms
-    ## primeiro em largura e profundidade
-    ## to be done
+        ##! Search Algorithms without Heuristic for now
+        # result = breadth_first_tree_search(newPipes)
+        result = depth_first_tree_search(pipeOne)
+        
+        print("check variables after Search Algorithm \n")
+        print(vars(result.state))
+        
+        print()
+        print("Deterministic Inference + Search Algorithm")
+        print("Reached the goal: ", pipeOne.goal_test(result.state))
