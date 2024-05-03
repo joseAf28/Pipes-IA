@@ -262,7 +262,7 @@ class Board:
             
         elif idPoint in setL:
             
-            if properPointsBoundary.size == 0:
+            if properPointsBoundary.size == 0 and properPointsBoundaryNot.size == 0:
                 return setL
             
             # ## get the points of all the possible points available
@@ -277,8 +277,11 @@ class Board:
             checkSimilarityNot = np.logical_not(checkSimilarityNot)
             
             ## compute the similarity between the external points and the boundary points
-            similarityVec = np.array([np.any(np.all(gridPointsSetAux[:, np.newaxis, :] == properPointsBoundary, axis=(2)), axis=1) for gridPointsSetAux in gridPointsSet], dtype=npType)
-            similarityVec = np.sum(similarityVec, axis=1)
+            if properPointsBoundary.size != 0:
+                similarityVec = np.array([np.any(np.all(gridPointsSetAux[:, np.newaxis, :] == properPointsBoundary, axis=(2)), axis=1) for gridPointsSetAux in gridPointsSet], dtype=npType)
+                similarityVec = np.sum(similarityVec, axis=1)
+            else:
+                similarityVec = np.zeros((gridPointsSet.shape[0],), dtype=npType)
             
             # ## find the best match(es) : all the options with less than the maximum similarity are discarded
             actions = setL[*np.where(np.logical_and(similarityVec == np.max(similarityVec), checkSimilarityNot))]
@@ -286,7 +289,7 @@ class Board:
         elif idPoint in setB:
             
             ## in case of not having points on the boundary, the full set is returned
-            if properPointsBoundary.size == 0:
+            if properPointsBoundary.size == 0 and properPointsBoundaryNot.size == 0:
                 return setB
 
             # ## get the points of all the possible points available
@@ -301,8 +304,11 @@ class Board:
             checkSimilarityNot = np.logical_not(checkSimilarityNot)
             
             ## compute the similarity between the external points and the boundary points
-            similarityVec = np.array([np.any(np.all(gridPointsSetAux[:, np.newaxis, :] == properPointsBoundary, axis=(2)), axis=1) for gridPointsSetAux in gridPointsSet], dtype=npType)
-            similarityVec = np.sum(similarityVec, axis=1)
+            if properPointsBoundary.size != 0:
+                similarityVec = np.array([np.any(np.all(gridPointsSetAux[:, np.newaxis, :] == properPointsBoundary, axis=(2)), axis=1) for gridPointsSetAux in gridPointsSet], dtype=npType)
+                similarityVec = np.sum(similarityVec, axis=1)
+            else:
+                similarityVec = np.zeros((gridPointsSet.shape[0],), dtype=npType)
             
             # ## find the best match(es) : all the options with less than the maximum similarity are discarded
             actions = setB[*np.where(np.logical_and(similarityVec == np.max(similarityVec), checkSimilarityNot))]
@@ -772,6 +778,9 @@ if __name__ == "__main__":
     pipeZero = PipeMania(board)
     if pipeZero.goal_test(board):
         print("The board is already solved.")
+        
+        print("vars: ", vars(board))
+        
         sys.exit(0)
     
     ##? Deterministic Inference
@@ -790,10 +799,9 @@ if __name__ == "__main__":
         print("check variables before Search Algorithm \n")
         print(vars(pipeOne.initial))
     
-    
         ##! Search Algorithms without Heuristic for now
-        # result = breadth_first_tree_search(newPipes)
-        result = depth_first_tree_search(pipeOne)
+        result = breadth_first_tree_search(pipeOne)
+        # result = depth_first_tree_search(pipeOne)
         
         print("check variables after Search Algorithm \n")
         print(vars(result.state))
