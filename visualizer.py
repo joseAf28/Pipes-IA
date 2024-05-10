@@ -5,7 +5,7 @@ import sys
 def visualizer():
     with sys.stdin as f:
         #Transforms the input into a grid for example, [["FC","VC"],["VC","FC"]]
-        grid = [line.strip().split("  ") for line in f] 
+        grid = [line.strip().split("\t") for line in f] 
 
         # Assuming the images are in images directory and named 'FC.png', 'VC.png', etc.
         path_to_images = 'images/'
@@ -20,9 +20,10 @@ def visualizer():
 
         for i, row in enumerate(grid):
             for j, img_code in enumerate(row):
+                
                 img_path = f"{path_to_images}{img_code}.png" 
                 img = mpimg.imread(img_path) 
                 axs[i, j].imshow(img) 
 
-        plt.show()  
+        plt.savefig('output.png')
 visualizer()

@@ -186,7 +186,8 @@ def breadth_first_tree_search(problem):
 
     frontier = deque([Node(problem.initial)])  # FIFO queue
     
-    while frontier:
+    # while frontier:
+    for i in range(10):
         node = frontier.popleft()
         if problem.goal_test(node.state):
             return node
@@ -207,7 +208,11 @@ def depth_first_tree_search(problem):
     frontier = [Node(problem.initial)]  # Stack
 
     while frontier:
+    # for i in range(10):
         node = frontier.pop()
+        
+        print(node.state)
+        
         if problem.goal_test(node.state):
             return node
         frontier.extend(node.expand(problem))
@@ -271,7 +276,9 @@ def best_first_graph_search(problem, f, display=False):
     frontier = PriorityQueue('min', f)
     frontier.append(node)
     explored = set()
-    while frontier:
+    
+    # while frontier:
+    for _ in range(10):
         node = frontier.pop()
         if problem.goal_test(node.state):
             if display:
