@@ -674,8 +674,7 @@ class PipeMania(Problem):
                 
                 idxActions = np.where(np.logical_and(state.board.maskFrameCheck == False, matrixAdjacents))
                 
-                # idxActions = np.where(state.board.maskFrameCheck == False)
-            
+                
             sizeDeterm = 0
             for x, y in zip(*idxActions):
                 
@@ -688,13 +687,9 @@ class PipeMania(Problem):
                 # print("*********"*10)
                 
                 if len(actions) == 0:
-                    
-                    print("error: no actions found")
-                    
                     matActions[x,y] = [-1]
-                
+                    
                 elif len(actions) == 1:
-    
                     
                     state.board.table[x,y] = actions[0]
                     state.board.maskFrameCheck[x,y] = True
@@ -719,10 +714,25 @@ class PipeMania(Problem):
                 if action == -1:
                     return np.array([], dtype=object)
         
-        # print("action: ", matActions)
         
-        return  np.array(actionNonDeterm, dtype=object)
-    
+        print("ActionNonDeterm: ", actionNonDeterm)
+        actionNonDeterm = np.array(actionNonDeterm, dtype=object)
+        
+        if actionNonDeterm.size == 0:
+            
+            return np.array([], dtype=object)
+            
+        else:
+            valueNode = actionNonDeterm.shape[0]*np.ones((actionNonDeterm.shape[0],))
+            valueNode = np.cumsum(valueNode) - valueNode
+            
+            countVec = np.sum(np.all(actionNonDeterm[:, np.newaxis, :2] == actionNonDeterm[:, :2], axis=2), axis=1)
+            
+            idsSort = np.argsort(countVec)
+            newActionNonDeterm = np.column_stack((actionNonDeterm[idsSort], valueNode))
+            
+            return newActionNonDeterm
+        
     
     def result(self, state: PipeManiaState, action):
         
@@ -770,14 +780,32 @@ class PipeMania(Problem):
     
     def h(self, node: Node):
         
-        # print("Node: ")
-        # print("Action: ", node.action)
+        print("Node: ")
+        print("Action: ", node.action)
+        print("Path Cost: ", node.path_cost)
+        print("node: ", node)
+        if node.parent is not None:
+            print("parent: ", node.parent.action)
+            print("path cost parent: ", node.parent.path_cost)
         # print("State: ", node.state.board.table)
         
-        # print("*"*50)
         # print(Node.actions)
+        fValue = 0
+        if node.parent is not None:
+            fValue = node.parent.path_cost
         
-        return 1
+        
+        hValue = 0
+        if node.action is None:
+            node.path_cost = 0
+        else:
+            hValue = fValue + node.action[3]
+            node.path_cost = hValue
+        
+        print("hValue: ", hValue)
+        print("*"*50)
+        
+        return hValue
 
 
 import time
@@ -801,65 +829,17 @@ if __name__ == "__main__":
     problem = PipeMania(board)
     s0 = PipeManiaState(board)
     
-    actions = problem.actions(s0)
-    
-    # s0 = problem.result(s0, actions[0])
-    # s0 = problem.result(s0, actions[2])
-    
+    s0 = greedy_search(problem)
     # actions = problem.actions(s0)
     
-    # s0 = problem.result(s0, actions[1])
-    # s0 = problem.result(s0, actions[2])
-    # actions = problem.actions(s0)
     
-    # s0 = problem.result(s0, actions[0])
-    
-    # actions = problem.actions(s0)
-    
-    # s0 = problem.result(s0, actions[0])
-
-    # actions = problem.actions(s0)
-    
-    # s0 = problem.result(s0, actions[1])
-    
-    # actions = problem.actions(s0)
-    
-    # s0 = problem.result(s0, actions[1])
-    
-    # actions = problem.actions(s0)
-    # s0 = problem.result(s0, actions[0])
-    # actions = problem.actions(s0)
-    
-    # s0 = problem.result(s0, actions[12])
-    # actions = problem.actions(s0)
-    
-    print("Actions1:", actions)
-    print("AGain"*20)
-    print()
-    
-    print("test: ", problem.goal_test(s0))
-    
-    # actions =s0.board.strategyOne(5, 4, s0.board.maskFrameCheck)
-    # print("actions: ", actions, s0.board.table[5, 4], "x: ", 5, "y: ", 4)
-    
-    # actions = s0.board.strategyOne(5, 5, s0.board.maskFrameCheck)
-    # print("actions: ", actions, s0.board.table[5, 5], "x: ", 5, "y: ", 5)
-    
+    # print("Actions1:", actions)
     # print("AGain"*20)
     # print()
     
-    # actions = problem.actions(s0)
-    # print("Actions2:", actions)
+    # print("test: ", problem.goal_test(s0))
     
-    # actions = problem.actions(s0)
-    # result = problem.result(result, actions[2])
-    
-    # actions = problem.actions(result)
-    # result = problem.result(result, actions[2])
-    
-    # result2 = problem.result(result, actions[1])
-    
-    print("time: ", time.time()-timeInit)
+    # print("time: ", time.time()-timeInit)
     
     # action3 = problem.actions(result)
     # print("action 3: ", action3)
@@ -890,11 +870,11 @@ if __name__ == "__main__":
     # print("Time: ", time.time()-timeInit)
     
     
-    with open("outputAll.txt", "w") as f:
-        table = s0.board.table
-        mask = s0.board.maskFrameCheck.astype(np.str_)
-        for row, rowMask in zip(table, mask):
-            for i in range(len(row)):
-                newString = row[i] +rowMask[i]
-                f.write(newString + "\t")
-            f.write("\n")
+    # with open("outputAll.txt", "w") as f:
+    #     table = s0.board.table
+    #     mask = s0.board.maskFrameCheck.astype(np.str_)
+    #     for row, rowMask in zip(table, mask):
+    #         for i in range(len(row)):
+    #             newString = row[i] +rowMask[i]
+    #             f.write(newString + "\t")
+    #         f.write("\n")

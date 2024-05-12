@@ -11,7 +11,7 @@ def visualizer():
         path_to_images = 'images/'
 
      
-        fig, axs = plt.subplots(len(grid), len(grid[0]), figsize=(5, 5)) 
+        fig, axs = plt.subplots(len(grid), len(grid[0]), figsize=(10, 10)) 
 
         plt.subplots_adjust(left=0, bottom=0, right=1, top=1, wspace=0, hspace=0)
   
@@ -21,9 +21,9 @@ def visualizer():
         for i, row in enumerate(grid):
             for j, img_code in enumerate(row):
                 
-                img_path = f"{path_to_images}{img_code}.png" 
+                img_path = f"{path_to_images}{img_code}.jpg" 
                 img = mpimg.imread(img_path) 
                 axs[i, j].imshow(img) 
 
-        plt.savefig('output.png')
+        plt.savefig('outputAll.png')
 visualizer()

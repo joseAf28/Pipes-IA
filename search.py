@@ -278,7 +278,7 @@ def best_first_graph_search(problem, f, display=False):
     explored = set()
     
     # while frontier:
-    for _ in range(10):
+    for _ in range(15):
         node = frontier.pop()
         if problem.goal_test(node.state):
             if display:
