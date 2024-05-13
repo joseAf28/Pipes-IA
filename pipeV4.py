@@ -190,61 +190,18 @@ class Board:
             else:
                 checkSimilarityNot = np.full((gridPointsSet.shape[0],), False, dtype=np.bool_)
             
-            # idxCheckBoundaries = np.full((gridPointsSet.shape[0],), True, dtype=np.bool_)
-            
-            # ##! Check if there is some F piece in the adjacent points
-            # ##! Adjacent F pieces could not join in the same point
-            # idxFbdr = np.array([[x2-1, y2], [x2+1, y2], [x2, y2+1], [x2, y2-1]], dtype=npType)
-            # idxFbdrCheck = np.all(np.logical_and(idxFbdr >= 0, idxFbdr < mSize), axis=1)
-                
-            # tableFdr = np.zeros_like(idxFbdrCheck, dtype=object)
-            # positionFdr = np.zeros_like(idxFbdrCheck, dtype=object)
-            # for i in range(idxFbdr.shape[0]):
-            #     x, y = idxFbdr[i]
-            #     if idxFbdrCheck[i]:
-            #         tableFdr[i] = self.table[x, y]
-            #         positionFdr[i] = [x, y]
-            #     else:
-            #         tableFdr[i] = "N"
-            #         positionFdr[i] = "N"
-                
-            # maskFdr = np.logical_and(idxFbdrCheck, np.isin(tableFdr, setF))
-            # positionF = list(np.where(np.isin(tableFdr, setF)))[0]
-                
-            # noActions = []
-            # for position in positionF:
-            #     if position == 0:
-            #         noActions.append("FC")
-            #     elif position == 1:
-            #         noActions.append("FB")
-            #     elif position == 2:
-            #         noActions.append("FD")
-            #     elif position == 3:
-            #         noActions.append("FE")
-            
-            
             ## in case of not having points on the boundary, the full set is returned and we arent in the external layer
             if properPointsBoundary.size == 0 and np.logical_not(boolLayerExt):
                 
-                actions = setF[np.logical_not(checkSimilarityNot)]
-                # actions = np.setdiff1d(actions, noActions)
-                    
-                return actions
-                
-                
-                # return setF[np.logical_not(checkSimilarityNot)]
+                return setF[np.logical_not(checkSimilarityNot)]
             
             elif properPointsBoundary.size == 0 and boolLayerExt:
                 
                 checkBoundaries = np.any(np.logical_or(gridPointsSet == 0, gridPointsSet == 2*mSize), axis=(1,2))
                 idxCheckBoundaries = np.logical_not(np.logical_or(checkBoundaries, checkSimilarityNot))
                 
-                actions = setF[idxCheckBoundaries]
-                # actions = np.setdiff1d(actions, noActions)
-                
-                return actions
-                
-                # return setF[idxCheckBoundaries]
+                return setF[idxCheckBoundaries]
+            
             elif boolLayerExt:
                 
                 checkBoundaries = np.any(np.logical_or(gridPointsSet == 0, gridPointsSet == 2*mSize), axis=(1,2))
@@ -257,9 +214,9 @@ class Board:
             similarityVec = np.array([np.any(np.all(gridPointsSetAux[:, np.newaxis, :] == properPointsBoundary, axis=(2)), axis=1) for gridPointsSetAux in gridPointsSet], dtype=npType)
             similarityVec = np.sum(similarityVec, axis=1)
             
+            maxSim = np.max(similarityVec)
             
-            actions = setF[*np.where(np.logical_and(similarityVec == np.max(similarityVec), idxCheckBoundaries))]
-            # actions = np.setdiff1d(actions, noActions)
+            actions = setF[*np.where(np.logical_and(similarityVec == maxSim, idxCheckBoundaries))]
             
         elif idPoint in setV:
             
@@ -302,7 +259,6 @@ class Board:
             
             # ## find the best match(es) : all the options with less than the maximum similarity are discarded
             actions = setV[*np.where(np.logical_and(similarityVec == np.max(similarityVec), idxCheckBoundaries))]
-            # actions = setV[*np.where(np.logical_and(similarityVec == np.max(similarityVec), np.logical_not(checkSimilarityNot)))]
             
         elif idPoint in setL:
             
@@ -398,70 +354,14 @@ class Board:
         return x2, y2, counterMax
     
     
-    
-    def strategyDetermisticLoop(self, loopNumber):
-        
-        mSize = self.table.shape[0]
-        
-        maskLevelUpper = np.full_like(self.table, False, dtype=np.bool_)
-        maskLevelUpper[loopNumber:-loopNumber, loopNumber] = True
-        maskLevelUpper[loopNumber:-loopNumber, -loopNumber-1] = True
-        maskLevelUpper[loopNumber, loopNumber:-loopNumber] = True
-        maskLevelUpper[-loopNumber-1, loopNumber:-loopNumber] = True
-        
-        boolUpperLayer = np.any(np.logical_and(maskLevelUpper, np.logical_not(self.maskFrameCheck)))
-        
-        ##! Fill the upper layer: it ends up when there are no more deterministic points to fill
-        while boolUpperLayer:
-            x2, y2, counterMax = self.findTheBestPoint(maskLevelUpper, self.maskFrameCheck, mSize)
-            
-            if counterMax == 0:
-                boolUpperLayer = False
-            else:
-                actions = self.strategyOne(x2, y2, self.maskFrameCheck, False)
-                
-                if len(actions) == 1:
-                    self.table[x2, y2] = actions[0]
-                    self.tableArr[x2, y2] = self.lookUpFunc(actions[0])
-                    self.maskFrameCheck[x2, y2] = True
-                    self.matActions[x2, y2] = 0
-                else:
-                    self.matActions[x2, y2] = actions
-                
-                maskLevelUpper[x2, y2] = False
-        
-        
-        maskLevelUpper = np.full_like(self.table, False, dtype=np.bool_)
-        maskLevelUpper[loopNumber:-loopNumber, loopNumber] = True
-        maskLevelUpper[loopNumber:-loopNumber, -loopNumber-1] = True
-        maskLevelUpper[loopNumber, loopNumber:-loopNumber] = True
-        maskLevelUpper[-loopNumber-1, loopNumber:-loopNumber] = True
-        
-        maskFrameCheck2nd = np.logical_and(np.logical_not(self.maskFrameCheck), maskLevelUpper)
-        
-        for x2, y2 in zip(*np.where(maskFrameCheck2nd)):
-            actions = self.strategyOne(x2, y2, self.maskFrameCheck)
-            
-            if len(actions) == 1:
-                self.table[x2, y2] = actions[0]
-                self.tableArr[x2, y2] = self.lookUpFunc(actions[0])
-                self.maskFrameCheck[x2, y2] = True
-                self.matActions[x2, y2] = 0
-            else:
-                self.matActions[x2, y2] = actions
-    
-    
     def deterministicInference(self):
         
         if self.table.shape[0] == 0:
             return True
-        
         mSize = self.table.shape[0]
-    
-    
+        
         dataPointsGrid = np.array([[self.getPointsSquare(x, y, self.lookUpFunc(self.table[x,y])) for y in range(mSize)] for x in range(mSize)], dtype=npType)
-
-
+        
         setF = np.array(['FC', 'FB', 'FE', 'FD'])
         setB = np.array(['BC', 'BB', 'BE', 'BD'])
         setV = np.array(['VC', 'VB', 'VE', 'VD'])
@@ -585,12 +485,6 @@ class Board:
 
 
 
-    def is_goal(self):
-        return np.all(self.maskFrameCheck)
-    
-    
-
-
 class PipeManiaState:
     state_id = 0
 
@@ -643,7 +537,7 @@ class PipeMania(Problem):
         
         return np.vectorize(lambda x: isinstance(x, np.ndarray))(x)
     
-    def actions(self, state: PipeManiaState):
+    def actionsAux(self, state: PipeManiaState):
         """Devolve as ações não deterministicas possíveis a partir de um estado."""
         
         ### todas as acões deterministas são diretamente implementadas no estado
@@ -683,9 +577,6 @@ class PipeMania(Problem):
                 else:
                     actions = state.board.strategyOne(x, y, state.board.maskFrameCheck)
                 
-                # print("actions: ", actions, x, y, state.board.table[x, y])
-                # print("*********"*10)
-                
                 if len(actions) == 0:
                     matActions[x,y] = [-1]
                     
@@ -715,51 +606,100 @@ class PipeMania(Problem):
                     return np.array([], dtype=object)
         
         
-        print("ActionNonDeterm: ", actionNonDeterm)
         actionNonDeterm = np.array(actionNonDeterm, dtype=object)
+        
+        ##! We use an Heuristic for the non-deterministic actions:
+        ##!  1. MRV heuristic: the pieces that have less options are put first
+        ##!     1.1 Higher degree heuristic: the pieces that have more adjacent pieces are put first
         
         if actionNonDeterm.size == 0:
             
             return np.array([], dtype=object)
             
         else:
-            valueNode = actionNonDeterm.shape[0]*np.ones((actionNonDeterm.shape[0],))
-            valueNode = np.cumsum(valueNode) - valueNode
-            
             countVec = np.sum(np.all(actionNonDeterm[:, np.newaxis, :2] == actionNonDeterm[:, :2], axis=2), axis=1)
             
-            idsSort = np.argsort(countVec)
-            newActionNonDeterm = np.column_stack((actionNonDeterm[idsSort], valueNode))
+            # just for debugging 
+            # actionNonDeterm = np.column_stack((actionNonDeterm, countVec))
             
-            return newActionNonDeterm
+            uniqueSize = np.unique(countVec)
+            actionCounts = np.array([actionNonDeterm[countVec == size] for size in uniqueSize], dtype=object)
+            
+            setF = np.array(['FC', 'FB', 'FE', 'FD'])
+            setB = np.array(['BC', 'BB', 'BE', 'BD'])
+            setV = np.array(['VC', 'VB', 'VE', 'VD'])
+            setL = np.array(['LH', 'LV'])
+            
+            for i in range(actionCounts.shape[0]):
+                
+                if actionCounts[i].shape[0] < 2:
+                    continue
+                else: 
+                    refVec = np.zeros_like(actionCounts[i][:,2], dtype=np.int_)
+                    
+                    idxB = np.isin(actionCounts[i][:,2], setB)
+                    idxL = np.isin(actionCounts[i][:,2], setL)
+                    idxV = np.isin(actionCounts[i][:,2], setV)
+                    idxF = np.isin(actionCounts[i][:,2], setF)
+                    
+                    refVec[idxB] = 1
+                    refVec[idxL] = 2
+                    refVec[idxV] = 3
+                    refVec[idxF] = 4
+                    
+                    idxSort = np.argsort(refVec)
+                    
+                    actionCounts[i] = actionCounts[i][idxSort]
+                    
+            actionNonDeterm = np.concatenate(actionCounts)
+            
+            return actionNonDeterm
+    
+    
+    
+    def actions(self, state: PipeManiaState):
         
+        newTable = state.board.table
+        newMaskFrameCheck = state.board.maskFrameCheck
+        newBoard = Board(newTable, newMaskFrameCheck)
+        newPipeManiaState = PipeManiaState(newBoard)
+        actions = self.actionsAux(newPipeManiaState)
+        
+        return actions
+    
     
     def result(self, state: PipeManiaState, action):
         
+        ##! Create a new state with the action applied
         x = action[0]
         y = action[1]
         action = action[2]
         
         newTable = state.board.table.copy()
-        newTable[x, y] = action
-        
         newMaskFrameCheck = state.board.maskFrameCheck.copy()
-        newMaskFrameCheck[x, y] = True
+        
+        ##! Hypothesis: put it at priori
+        # newTable[x, y] = action
+        # newMaskFrameCheck[x, y] = True
         
         newBoard = Board(newTable, newMaskFrameCheck)
-        return PipeManiaState(newBoard)
-    
-    
-    def goal_test(self, state: PipeManiaState):
+        newPipeManiaState = PipeManiaState(newBoard)
+        self.actions(newPipeManiaState)
         
+        ##! Hypothesis: put it at posteriori
+        newPipeManiaState.board.table[x, y] = action
+        newPipeManiaState.board.maskFrameCheck[x, y] = True
+        
+        return newPipeManiaState
+    
+    
+    def goal_testAux(self, state: PipeManiaState):
+        ##! Auxiliar Goal Test Function where we actually check if the state is a goal state
         tableArr = np.array([[state.board.lookUpFunc(x) for x in row] for row in state.board.table], dtype=npType)
-        
         mSize = tableArr.shape[0]
         
         dataPointsGrid = np.array([[state.board.getPointsSquare(x, y, tableArr[x,y]) for y in range(mSize)] for x in range(mSize)], dtype=npType)
         
-        
-        # return True
         dotsX2 = np.zeros((mSize-1, mSize, 2, 2), dtype=npType) ##! slices along x constant
         dotsY2 = np.zeros((mSize, mSize-1, 2, 2), dtype=npType) ##! slices along y constant
         
@@ -778,18 +718,42 @@ class PipeMania(Problem):
         return np.all(resLogicalX) and np.all(resLogicalY)
     
     
+    def goal_test(self, state: PipeManiaState):
+        
+        ##! goal test function: 
+        ##! It does a forward checking over the new state, a copy of the argument state
+        ##!     In case of the new state is a goal state, the argument state is updated with the new state and it returns True
+        ##!     Otherwise, it returns False
+        
+        newTable = state.board.table
+        newMaskFrameCheck = state.board.maskFrameCheck
+        newBoard = Board(newTable, newMaskFrameCheck)
+        newPipeManiaState = PipeManiaState(newBoard)
+        self.actionsAux(newPipeManiaState)
+        
+        if self.goal_testAux(newPipeManiaState):
+            state.board = newPipeManiaState.board
+            return True
+        else:
+            if np.all(newPipeManiaState.board.maskFrameCheck):
+                state.board.maskFrameCheck = newPipeManiaState.board.maskFrameCheck
+                return False
+            else:
+                return False
+    
+    
     def h(self, node: Node):
         
-        print("Node: ")
-        print("Action: ", node.action)
-        print("Path Cost: ", node.path_cost)
-        print("node: ", node)
-        if node.parent is not None:
-            print("parent: ", node.parent.action)
-            print("path cost parent: ", node.parent.path_cost)
+        ##! Not used in the current implementation: as we use the depth_first_tree_search
+        # print("Node: ")
+        # print("Action: ", node.action)
+        # print("Path Cost: ", node.path_cost)
+        # print("node: ", node)
+        # if node.parent is not None:
+        #     print("parent: ", node.parent.action)
+        #     print("path cost parent: ", node.parent.path_cost)
         # print("State: ", node.state.board.table)
         
-        # print(Node.actions)
         fValue = 0
         if node.parent is not None:
             fValue = node.parent.path_cost
@@ -801,9 +765,6 @@ class PipeMania(Problem):
         else:
             hValue = fValue + node.action[3]
             node.path_cost = hValue
-        
-        print("hValue: ", hValue)
-        print("*"*50)
         
         return hValue
 
@@ -823,58 +784,19 @@ if __name__ == "__main__":
     ##! Start with the Board class and simplify the outer layer as much as possible.
     board.deterministicInference()
     
-    
-    timeInit = time.time()
-    
     problem = PipeMania(board)
     s0 = PipeManiaState(board)
     
-    s0 = greedy_search(problem)
-    # actions = problem.actions(s0)
+    node = depth_first_tree_search(problem)
     
-    
-    # print("Actions1:", actions)
-    # print("AGain"*20)
-    # print()
-    
-    # print("test: ", problem.goal_test(s0))
-    
-    # print("time: ", time.time()-timeInit)
-    
-    # action3 = problem.actions(result)
-    # print("action 3: ", action3)
-    # # for _ in range(4):
-    #     actions2 = problem.actions(s0)
-        
-        
+    print("test goal: ", problem.goal_test(node.state))
     print("time: ", time.time()-timeInit)
     
-    # print("action 0: ", actions.shape)
-    # print(actions)
-    
-    
-    # result = greedy_search(problem)
-    
-    # result1 = problem.result(s0, actions[0])
-    # actions2 = problem.actions(result1)
-    
-    # result2 = problem.result(result1, actions2[0])
-    # actions3 = problem.actions(result2)
-    
-    # print("action 1: ", actions2.shape)
-    
-    # print("action 2: ", actions3.shape)
-    
-    # result = depth_first_tree_search(problem)
-    
-    # print("Time: ", time.time()-timeInit)
-    
-    
-    # with open("outputAll.txt", "w") as f:
-    #     table = s0.board.table
-    #     mask = s0.board.maskFrameCheck.astype(np.str_)
-    #     for row, rowMask in zip(table, mask):
-    #         for i in range(len(row)):
-    #             newString = row[i] +rowMask[i]
-    #             f.write(newString + "\t")
-    #         f.write("\n")
+    with open("outputAll.txt", "w") as f:
+        table = node.state.board.table
+        mask = node.state.board.maskFrameCheck.astype(np.str_)
+        for row, rowMask in zip(table, mask):
+            for i in range(len(row)):
+                newString = row[i] +rowMask[i]
+                f.write(newString + "\t")
+            f.write("\n")
