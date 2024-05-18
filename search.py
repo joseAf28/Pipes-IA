@@ -208,8 +208,8 @@ def depth_first_tree_search(problem):
     frontier = [Node(problem.initial)]  # Stack
 
     i = 0
-    # while frontier:
-    for i in range(20000):
+    while frontier:
+    # for i in range(20000):
         node = frontier.pop()
         
         if problem.goal_test(node.state):
@@ -217,19 +217,19 @@ def depth_first_tree_search(problem):
         
         frontier.extend(node.expand(problem))
 
-        if i % 100 == 0:
-            print("i: ", i)
-            print(f"Depth: {node.depth}")
-            print("len(frontier): ", len(frontier))
-            print("actions: ", problem.actions(node.state))
-        
-        print("i: ", i)
-        print(f"Depth: {node.depth}")
-        print("len(frontier): ", len(frontier))
-        print("actions: ", problem.actions(node.state))
+        # if i % 100 == 0:
+        #     print("i: ", i)
+        #     print(f"Depth: {node.depth}")
+        #     print("len(frontier): ", len(frontier))
+        #     print("actions: ", problem.actions(node.state))
         
         # print("i: ", i)
-        i += 1
+        # print(f"Depth: {node.depth}")
+        # print("len(frontier): ", len(frontier))
+        # print("actions: ", problem.actions(node.state))
+        
+        # print("i: ", i)
+        # i += 1
         
     # return None
     return node

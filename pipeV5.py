@@ -216,7 +216,7 @@ class Board:
             
             maxSim = np.max(similarityVec)
             
-            actions = setF[*np.where(np.logical_and(similarityVec == maxSim, idxCheckBoundaries))]
+            actions = setF[np.where(np.logical_and(similarityVec == maxSim, idxCheckBoundaries))]
             
         elif idPoint in setV:
             
@@ -258,7 +258,7 @@ class Board:
             similarityVec = np.sum(similarityVec, axis=1)
             
             # ## find the best match(es) : all the options with less than the maximum similarity are discarded
-            actions = setV[*np.where(np.logical_and(similarityVec == np.max(similarityVec), idxCheckBoundaries))]
+            actions = setV[np.where(np.logical_and(similarityVec == np.max(similarityVec), idxCheckBoundaries))]
             
         elif idPoint in setL:
             
@@ -283,7 +283,7 @@ class Board:
                 similarityVec = np.zeros((gridPointsSet.shape[0],), dtype=npType)
             
             # ## find the best match(es) : all the options with less than the maximum similarity are discarded
-            actions = setL[*np.where(np.logical_and(similarityVec == np.max(similarityVec), checkSimilarityNot))]
+            actions = setL[np.where(np.logical_and(similarityVec == np.max(similarityVec), checkSimilarityNot))]
             
         elif idPoint in setB:
             
@@ -310,7 +310,7 @@ class Board:
                 similarityVec = np.zeros((gridPointsSet.shape[0],), dtype=npType)
             
             # ## find the best match(es) : all the options with less than the maximum similarity are discarded
-            actions = setB[*np.where(np.logical_and(similarityVec == np.max(similarityVec), checkSimilarityNot))]
+            actions = setB[np.where(np.logical_and(similarityVec == np.max(similarityVec), checkSimilarityNot))]
     
         return actions
 
@@ -414,7 +414,8 @@ class Board:
                 idxCheckBoundaries = np.where(~checkBoundaries)[0]
                 
                 if len(idxCheckBoundaries) > 1:
-                    print("error: more than one possible solution")
+                    pass
+                    # print("error: more than one possible solution")
                 else:
                     self.table[x, y] = setB[idxCheckBoundaries[0]]
                 
@@ -426,7 +427,8 @@ class Board:
                 idxCheckBoundaries = np.where(~checkBoundaries)[0]
                 
                 if len(idxCheckBoundaries) > 1:
-                    print("error: more than one possible solution")
+                    pass
+                    # print("error: more than one possible solution")
                 else:
                     self.table[x,y] = setL[idxCheckBoundaries[0]]
 
@@ -438,7 +440,8 @@ class Board:
                 idxCheckBoundaries = np.where(~checkBoundaries)[0]
                 
                 if len(idxCheckBoundaries) > 1:
-                    print("error: more than one possible solution")
+                    pass
+                    # print("error: more than one possible solution")
                 else:
                     self.table[x, y] = setV[idxCheckBoundaries[0]]
         
@@ -536,6 +539,7 @@ class PipeMania(Problem):
     def isArrayVectorized(x):
         
         return np.vectorize(lambda x: isinstance(x, np.ndarray))(x)
+    
     
     def actionsAux(self, state: PipeManiaState):
         """Devolve as ações não deterministicas possíveis a partir de um estado."""
@@ -769,13 +773,9 @@ class PipeMania(Problem):
         return hValue
 
 
-import time
 
 if __name__ == "__main__":
     
-    ##? Implementar procura gaanciosa ...
-    
-    timeInit = time.time()
     ##! Obtain the Board from the standard input
     board = Board.parse_instance()
     
@@ -789,14 +789,21 @@ if __name__ == "__main__":
     
     node = depth_first_tree_search(problem)
     
-    print("test goal: ", problem.goal_test(node.state))
-    print("time: ", time.time()-timeInit)
+    # print("test goal: ", problem.goal_test(node.state))
+    # with open("outputAll.txt", "w") as f:
+    #     table = node.state.board.table
+    #     mask = node.state.board.maskFrameCheck.astype(np.str_)
+    #     for row, rowMask in zip(table, mask):
+    #         for i in range(len(row)):
+    #             newString = row[i] +rowMask[i]
+    #             f.write(newString + "\t")
+    #         f.write("\n")
     
-    with open("outputAll.txt", "w") as f:
-        table = node.state.board.table
-        mask = node.state.board.maskFrameCheck.astype(np.str_)
-        for row, rowMask in zip(table, mask):
-            for i in range(len(row)):
-                newString = row[i] +rowMask[i]
-                f.write(newString + "\t")
-            f.write("\n")
+    ##! Print the output
+    table = node.state.board.table
+    for i, row in enumerate(table):
+        for j, x in enumerate(row):
+            if j < len(row)-1:
+                print(x, end="\t")
+            else:
+                print(x, end="\n")
