@@ -209,32 +209,14 @@ def depth_first_tree_search(problem):
     """
 
     frontier = [Node(problem.initial)]  # Stack
-
-    i = 0
+    
     while frontier:
-    # for i in range(20000):
         node = frontier.pop()
         
         if problem.goal_test(node.state):
             return node
         
         frontier.extend(node.expand(problem))
-
-        # if i % 100 == 0:
-        #     print("i: ", i)
-        #     print(f"Depth: {node.depth}")
-        #     print("len(frontier): ", len(frontier))
-        #     print("actions: ", problem.actions(node.state))
-        
-        # print("i: ", i)
-        # print(f"Depth: {node.depth}")
-        # print("len(frontier): ", len(frontier))
-        # print("actions: ", problem.actions(node.state))
-        
-        # print("i: ", i)
-        # i += 1
-        
-    # return None
     return node
 
 
@@ -296,8 +278,7 @@ def best_first_graph_search(problem, f, display=False):
     frontier.append(node)
     explored = set()
     
-    # while frontier:
-    for _ in range(15):
+    while frontier:
         node = frontier.pop()
         if problem.goal_test(node.state):
             if display:
