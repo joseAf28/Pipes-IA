@@ -100,6 +100,9 @@ class Node:
         """[Figure 3.10]"""
         next_state = problem.result(self.state, action)
         next_node = Node(next_state, self, action, problem.path_cost(self.path_cost, self.state, action, next_state))
+        
+        # print("comparsion: ", np.all(self.state.board.table == next_state.board.table))
+        
         return next_node
 
     def solution(self):
