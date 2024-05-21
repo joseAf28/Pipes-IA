@@ -630,48 +630,7 @@ class PipeMania(Problem):
         
         actionNonDeterm = np.array(actionNonDeterm, dtype=object)
         
-        ##! We use an Heuristic for the non-deterministic actions:
-        ##!  1. MRV heuristic: the pieces that have less options are put first
-        ##!     1.1 Higher degree heuristic: the pieces that have more adjacent pieces are put first
-        
-        if actionNonDeterm.size == 0:
-            return np.array([], dtype=object)
-            
-        else:
-            countVec = np.sum(np.all(actionNonDeterm[:, np.newaxis, :2] == actionNonDeterm[:, :2], axis=2), axis=1)
-            
-            uniqueSize = np.unique(countVec)
-            actionCounts = np.array([actionNonDeterm[countVec == size] for size in uniqueSize], dtype=object)
-            
-            setF = np.array(['FC', 'FB', 'FE', 'FD'])
-            setB = np.array(['BC', 'BB', 'BE', 'BD'])
-            setV = np.array(['VC', 'VB', 'VE', 'VD'])
-            setL = np.array(['LH', 'LV'])
-            
-            for i in range(actionCounts.shape[0]):
-                
-                if actionCounts[i].shape[0] < 2:
-                    continue
-                else: 
-                    refVec = np.zeros_like(actionCounts[i][:,2], dtype=np.int_)
-                    
-                    idxB = np.isin(actionCounts[i][:,2], setB)
-                    idxL = np.isin(actionCounts[i][:,2], setL)
-                    idxV = np.isin(actionCounts[i][:,2], setV)
-                    idxF = np.isin(actionCounts[i][:,2], setF)
-                    
-                    ##! the order of the pieces is B, L, V, F
-                    refVec[idxB] = 1
-                    refVec[idxL] = 2
-                    refVec[idxV] = 3
-                    refVec[idxF] = 4
-                    
-                    idxSort = np.argsort(refVec)
-                    actionCounts[i] = actionCounts[i][idxSort]
-                    
-            actionNonDeterm = np.concatenate(actionCounts)
-            
-            return actionNonDeterm
+        return actionNonDeterm
     
     
     def actions(self, state: PipeManiaState):
@@ -772,9 +731,14 @@ if __name__ == "__main__":
     
     ##! Print the output
     table = node.state.board.table
-    for i, row in enumerate(table):
-        for j, x in enumerate(row):
-            if j < len(row)-1:
-                print(x, end="\t")
-            else:
-                print(x, end="\n")
+    with open("output.txt", "w") as f:
+        for i, row in enumerate(table):
+            for j, x in enumerate(row):
+                if j < len(row)-1:
+                    f.write(x + "\t")
+                else:
+                    f.write(x + "\n")
+    
+    ##! define the base line model: depth first search with inference
+    ##! v1: depth first search with inference and heuristic for the non-deterministic actions
+    ##! v2: depth first search with inference and heuristic for the non-deterministic actions and forward checking

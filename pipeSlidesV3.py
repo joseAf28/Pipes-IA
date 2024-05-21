@@ -530,6 +530,8 @@ class PipeManiaState:
 
 class PipeMania(Problem):
     
+    counterOutput = 0
+    
     def __init__(self, board: Board):
         self.initial = PipeManiaState(board)
     
@@ -613,6 +615,17 @@ class PipeMania(Problem):
                     
                     matMarked[x,y] = True
                     matActions[x,y] = 0
+                    
+                    with open("plotTable/output" + str(self.counterOutput) + ".txt", "w") as f:
+                        for i, row in enumerate(state.board.table):
+                            for j, x in enumerate(row):
+                                if j < len(row)-1:
+                                    f.write(x + str(state.board.maskFrameCheck[i,j]) + "\t")
+                                else:
+                                    f.write(x + str(state.board.maskFrameCheck[i,j]) + "\n")
+                                    
+                    self.counterOutput += 1
+                    
                 else:
                     matActions[x,y] = actions
                 
@@ -686,6 +699,7 @@ class PipeMania(Problem):
         return actions
     
     
+    
     def result(self, state: PipeManiaState, action):
         """Returns the state that results from taking the given action in the current state."""
         
@@ -703,6 +717,15 @@ class PipeMania(Problem):
         ##! Apply the action
         newPipeManiaState.board.table[x, y] = action
         newPipeManiaState.board.maskFrameCheck[x, y] = True
+        
+        with open("plotTable/output" + str(self.counterOutput) + ".txt", "w") as f:
+            for i, row in enumerate(newPipeManiaState.board.table):
+                for j, x in enumerate(row):
+                    if j < len(row)-1:
+                        f.write(x + str(state.board.maskFrameCheck[i,j]) + "\t")
+                    else:
+                        f.write(x + str(state.board.maskFrameCheck[i,j]) + "\n")
+        self.counterOutput += 1
         
         return newPipeManiaState
     
@@ -739,6 +762,7 @@ class PipeMania(Problem):
         of applying the action selected by the search algorithm."""
         
         self.actionsAux(state)
+        
         if self.goal_testAux(state):
             return True
         else:
@@ -772,9 +796,15 @@ if __name__ == "__main__":
     
     ##! Print the output
     table = node.state.board.table
-    for i, row in enumerate(table):
-        for j, x in enumerate(row):
-            if j < len(row)-1:
-                print(x, end="\t")
-            else:
-                print(x, end="\n")
+    maskFrameCheck = node.state.board.maskFrameCheck
+    with open("output.txt", "w") as f:
+        for i, row in enumerate(table):
+            for j, x in enumerate(row):
+                if j < len(row)-1:
+                    f.write(x + str(maskFrameCheck[i,j]) + "\t")
+                else:
+                    f.write(x + str(maskFrameCheck[i,j]) + "\n")
+    
+    ##! define the base line model: depth first search with inference
+    ##! v1: depth first search with inference and heuristic for the non-deterministic actions
+    ##! v2: depth first search with inference and heuristic for the non-deterministic actions and forward checking

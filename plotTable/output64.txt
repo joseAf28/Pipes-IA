@@ -1,0 +1,10 @@
+FBTrue	FBTrue	VBTrue	LHTrue	LHTrue	VETrue	VBTrue	LHTrue	FETrue	FBTrue
+BDTrue	BETrue	LVTrue	FDTrue	VETrue	LVTrue	LVTrue	VBTrue	LHTrue	VCTrue
+FCTrue	BDTrue	VCTrue	FDTrue	BETrue	LVTrue	BDTrue	BCTrue	FETrue	FBTrue
+FDTrue	VCTrue	FDTrue	BBTrue	BCFalse	VDFalse	BBFalse	LHTrue	LHTrue	VCTrue
+VBTrue	FETrue	FBTrue	BDTrue	FETrue	FDFalse	BEFalse	LHTrue	FETrue	FBTrue
+LVTrue	FBTrue	LVTrue	BDTrue	LHTrue	BDFalse	BCTrue	LHTrue	LHTrue	VCTrue
+LVTrue	LVTrue	BDTrue	BETrue	VBTrue	VETrue	VBTrue	LHTrue	FETrue	FBTrue
+VDTrue	BCTrue	VCTrue	BDTrue	BDFalse	VDTrue	BETrue	VBTrue	FETrue	LVTrue
+FBTrue	FBTrue	FDTrue	VCTrue	LVTrue	FBTrue	FCTrue	LVTrue	FBTrue	LVTrue
+VDTrue	BCTrue	LHTrue	LHTrue	BCTrue	BCTrue	LHTrue	BCTrue	BCTrue	VCTrue
