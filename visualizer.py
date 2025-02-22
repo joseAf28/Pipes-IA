@@ -20,14 +20,14 @@ def visualizer(fileName, outputName):
         for i, row in enumerate(grid):
             for j, img_code in enumerate(row):
                 
-                img_path = f"{path_to_images}{img_code}.jpg" 
+                img_path = f"{path_to_images}{img_code}.png" 
                 img = mpimg.imread(img_path) 
                 axs[i, j].imshow(img) 
 
         plt.savefig(outputName)
         plt.close(fig)
 
-# visualizer("output.txt", "output.png")
+visualizer("output.txt", "output.png")
 
 def list_files_in_directory(directory_path):
     try:
@@ -49,14 +49,14 @@ def list_files_in_directory(directory_path):
         return []
 
 
-pathFolder = os.path.dirname(os.path.abspath(__file__))
-plotsFolder = os.path.join(pathFolder, "plotTable")
-outputFolder = os.path.join(pathFolder, "plotTableImages")
+# pathFolder = os.path.dirname(os.path.abspath(__file__))
+# plotsFolder = os.path.join(pathFolder, "plotTable")
+# outputFolder = os.path.join(pathFolder, "plotTableImages")
 
-plotFiles = list_files_in_directory(plotsFolder)
+# plotFiles = list_files_in_directory(plotsFolder)
 
-for file in plotFiles:
-    outputName = file.split(".")[0]
-    visualizer(os.path.join(plotsFolder, file), os.path.join(outputFolder, f"{outputName}.png"))
+# for file in plotFiles:
+#     outputName = file.split(".")[0]
+#     visualizer(os.path.join(plotsFolder, file), os.path.join(outputFolder, f"{outputName}.png"))
 
 # print("Files in directory:", files)
